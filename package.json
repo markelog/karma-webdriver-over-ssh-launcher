@@ -1,6 +1,6 @@
 {
   "name": "karma-webdriver-over-ssh-launcher",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A Karma plugin. Launcher for Remote WebDriver instances over ssh",
   "main": "dist/index.js",
   "scripts": {

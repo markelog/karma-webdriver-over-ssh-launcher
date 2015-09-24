@@ -238,6 +238,7 @@ describe('index', () => {
 
       let returnLoggerStub = sinon.stub();
       let failStub = sinon.stub();
+      let thenStub = sinon.stub();
       let loggerStub = {
         create: sinon.stub().returns(returnLoggerStub)
       };
@@ -249,7 +250,8 @@ describe('index', () => {
           port: 2
         },
         promise: {
-          fail: failStub
+          fail: failStub,
+          then: thenStub
         }
       };
 
@@ -274,6 +276,7 @@ describe('index', () => {
       SSHwd.call(context, 1, 2, loggerStub, tunnelStub, emitterStub);
 
       context._start('http://localhost:9876/?bla=1');
+      thenStub.getCall(0).args[0].call();
       expect(oldStartStub.getCall(0).args[0]).to.equal('http://a:2/?bla=1');
     });
   });
