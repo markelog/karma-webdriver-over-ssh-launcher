@@ -33,7 +33,16 @@ describe('Tunnel#addEvents', () => {
 
     tunnel = new Tunnel(from, to, logger);
 
-    tunnel.connection = new EventEmitter();
+    var EE;
+
+    // For Node .10
+    if (typeof EventEmitter === 'object') {
+      EE = EventEmitter.EventEmitter;
+    } else {
+      EE = EventEmitter;
+    }
+
+    tunnel.connection = new EE();
     tunnel.connection.forwardIn = sinon.stub();
   });
 
