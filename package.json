@@ -38,6 +38,7 @@
     "vow": "^0.4.10"
   },
   "devDependencies": {
+    "babel": "^5.8.23",
     "chai": "^3.3.0",
     "eslint": "^1.5.1",
     "gaze": "^0.5.1",
