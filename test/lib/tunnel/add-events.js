@@ -1,10 +1,11 @@
-import sinon from 'sinon';
-import { expect } from 'chai';
-import Connection from 'ssh2';
 import EventEmitter from 'events';
 import { Readable } from 'stream';
 
+import sinon from 'sinon';
+import { expect } from 'chai';
 import rewire from 'rewire';
+
+import Connection from 'ssh2';
 
 let Tunnel = rewire('../../../lib/tunnel');
 
