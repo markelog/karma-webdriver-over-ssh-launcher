@@ -1,0 +1,49 @@
+{
+  "name": "karma-webdriver-over-ssh-launcher",
+  "version": "0.0.1",
+  "description": "A Karma plugin. Launcher for Remote WebDriver instances over ssh",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "babel lib -d dist",
+    "watch": "gaze 'npm run build' lib/*",
+    "watch-test": "mocha test/lib lib --recursive --compilers js:babel/register --watch",
+    "tw": "npm run watch-test",
+    "lint": "npm run eslint && npm run jscs",
+    "jscs": "jscs lib test",
+    "eslint": "eslint lib test",
+    "test": "npm run lint && mocha test/lib lib --recursive --compilers js:babel/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/markelog/karma-webdriver-over-ssh-launcher"
+  },
+  "keywords": [
+    "karma-plugin",
+    "launcher",
+    "WebDriver",
+    "wd",
+    "ssh"
+  ],
+  "author": "Oleg Gaidarenko <markelog@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/markelog/karma-webdriver-over-ssh-launcher)/issues"
+  },
+  "homepage": "https://github.com/markelog/karma-webdriver-over-ssh-launcher)",
+  "dependencies": {
+    "inherit": "^2.2.2",
+    "karma-webdriver-launcher": "^1.0.4",
+    "lodash": "^3.10.1",
+    "ssh2": "^0.4.11",
+    "vow": "^0.4.10"
+  },
+  "devDependencies": {
+    "chai": "^3.3.0",
+    "eslint": "^1.5.1",
+    "gaze": "^0.5.1",
+    "jscs": "^2.1.1",
+    "mocha": "^2.3.3",
+    "rewire": "^2.3.4",
+    "sinon": "^1.17.0"
+  }
+}
