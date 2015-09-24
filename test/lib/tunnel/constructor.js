@@ -39,7 +39,7 @@ describe('Tunnel#constructor', () => {
     expect(tunnel.to.port).to.equal(to.port);
 
     expect(tunnel.username).to.equal(process.env.USER);
-    expect(tunnel.key).to.be.an('object');
+    expect(tunnel.key).to.be.an.instanceof(Buffer);
 
     expect(tunnel.defer).to.equal(undefined);
 
