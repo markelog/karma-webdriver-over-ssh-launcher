@@ -1,11 +1,24 @@
-import { expect } from 'chai';
-import Connection from 'ssh2';
-
 import * as fs from 'fs';
 
-import Tunnel from '../../../lib/tunnel';
+import sinon from 'sinon';
+import { expect } from 'chai';
+import rewire from 'rewire';
+
+import Connection from 'ssh2';
+
+let Tunnel = rewire('../../../lib/tunnel');
 
 describe('Tunnel#constructor', () => {
+  var path = Tunnel.__get__('path');
+
+  beforeEach(() => {
+    sinon.stub(path, 'join', () => __filename);
+  });
+
+  afterEach(() => {
+    path.join.restore();
+  });
+
   it('should define all needed properties', function() {
     let from = {
       hostname: 'a',
