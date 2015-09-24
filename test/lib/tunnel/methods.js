@@ -49,7 +49,7 @@ describe('Tunnel methods', () => {
       expect(call.host).to.equal('b');
       expect(call.port).to.equal(22);
       expect(call.username).to.equal('me');
-      expect(call.privateKey).to.be.an('object');
+      expect(call.privateKey).to.be.an.instanceof(Buffer);
 
       expect(tunnel.retryTimes).to.equal(2);
     });

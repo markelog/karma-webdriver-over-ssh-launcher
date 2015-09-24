@@ -67,8 +67,7 @@ describe('Tunnel#addEvents', () => {
     }, 2);
 
     expect(stream.pause.calledOnce).to.equal(true);
-
-    // expect(net.connect.calledOnce).to.equal(true);
+    expect(net.connect.calledOnce).to.equal(true);
 
     let args = net.connect.getCall(0).args;
 
