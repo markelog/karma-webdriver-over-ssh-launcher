@@ -28,7 +28,7 @@ describe('index', () => {
 
     it('should create tunnel', () => {
 
-      // babel side-effect :-(
+      // babel side effect :-(
       let tunnel1 = index.__get__('_tunnel');
       let tunnel2 = index.__get__('_tunnel2');
       let loggerCreate = {};
@@ -104,7 +104,7 @@ describe('index', () => {
     });
 
     it('should react on "exit" event', () => {
-      // babel side-effect :-(
+      // babel side effect :-(
       let tunnel1 = index.__get__('_tunnel');
       let tunnel2 = index.__get__('_tunnel2');
 
