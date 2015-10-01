@@ -4,6 +4,7 @@ import { Readable } from 'stream';
 import sinon from 'sinon';
 import { expect } from 'chai';
 import rewire from 'rewire';
+import * as oldNet from 'net';
 
 import Connection from 'ssh2';
 
@@ -50,6 +51,8 @@ describe('Tunnel#addEvents', () => {
     for (let stub in stubs) {
       stubs[stub].restore();
     }
+
+    Tunnel.__set__('net', oldNet);
   });
 
   it('should deal with "tcp connection"', () => {
