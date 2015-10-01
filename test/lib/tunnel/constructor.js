@@ -10,16 +10,20 @@ let Tunnel = rewire('../../../lib/tunnel');
 
 describe('Tunnel#constructor', () => {
   var path = Tunnel.__get__('path');
+  var oldSock = process.env.SSH_AUTH_SOCK;
 
   beforeEach(() => {
     sinon.stub(path, 'join', () => __filename);
   });
 
   afterEach(() => {
+    process.env.SSH_AUTH_SOCK = oldSock;
     path.join.restore();
   });
 
   it('should define all needed properties', function() {
+    process.env.SSH_AUTH_SOCK = 'tmp';
+
     let from = {
       hostname: 'a',
       port: 1
@@ -39,7 +43,44 @@ describe('Tunnel#constructor', () => {
     expect(tunnel.to.port).to.equal(to.port);
 
     expect(tunnel.username).to.equal(process.env.USER);
-    expect(tunnel.key).to.be.an.instanceof(Buffer);
+    expect(tunnel.agent).to.equal('tmp');
+    expect(tunnel.key).to.equal(undefined);
+
+    expect(tunnel.defer).to.equal(undefined);
+
+    expect(tunnel.promise).to.have.property('then');
+    expect(tunnel.promise).to.not.have.property('resolve');
+
+    expect(tunnel.logger).to.not.have.property('info', 'error');
+    expect(tunnel.connection).to.be.an.instanceof(Connection);
+
+    expect(tunnel.retryTimes).to.be.equal(0);
+  });
+
+  it('should define all needed properties with private key', function() {
+    delete process.env.SSH_AUTH_SOCK;
+
+    let from = {
+      hostname: 'a',
+      port: 1
+    };
+
+    let to = {
+      hostname: 'b',
+      port: 2
+    };
+
+    let tunnel = new Tunnel(from, to);
+
+    expect(tunnel.from).to.deep.equal(from);
+    expect(tunnel.to).to.deep.equal(to);
+
+    expect(tunnel.portRange).to.equal(to.port);
+    expect(tunnel.to.port).to.equal(to.port);
+
+    expect(tunnel.username).to.equal(process.env.USER);
+    expect(tunnel.agent).to.equal(undefined);
+    expect(tunnel.key).to.be.instanceof(Buffer);
 
     expect(tunnel.defer).to.equal(undefined);
 
