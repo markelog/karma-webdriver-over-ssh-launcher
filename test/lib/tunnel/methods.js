@@ -8,6 +8,7 @@ let Tunnel = rewire('../../../lib/tunnel');
 
 describe('Tunnel methods', () => {
   var path = Tunnel.__get__('path');
+  var oldSock = process.env.SSH_AUTH_SOCK;
 
   // babel side effect :-(
   var Connection = Tunnel.__get__('_ssh22');
@@ -26,10 +27,13 @@ describe('Tunnel methods', () => {
   afterEach(() => {
     path.join.restore();
     Connection.default.restore();
+    process.env.SSH_AUTH_SOCK = oldSock;
   });
 
   describe('Tunnel#connect', () => {
     it('should invoke ssh "connect" method', () => {
+      delete process.env.SSH_AUTH_SOCK;
+
       let from = {
         hostname: 'a',
         port: 1,
@@ -50,6 +54,61 @@ describe('Tunnel methods', () => {
       expect(call.port).to.equal(22);
       expect(call.username).to.equal('me');
       expect(call.privateKey).to.be.an.instanceof(Buffer);
+
+      expect(tunnel.retryTimes).to.equal(2);
+    });
+
+    it('should invoke ssh "connect" method with ssh-agent', () => {
+      process.env.SSH_AUTH_SOCK = 'tmp';
+
+      let from = {
+        hostname: 'a',
+        port: 1,
+        key: __filename
+      };
+
+      let to = {
+        username: 'me',
+        hostname: 'b',
+        port: 2
+      };
+
+      let tunnel = new Tunnel(from, to);
+      tunnel.connect(2);
+
+      var call = tunnel.connection.connect.getCall(0).args[0];
+      expect(call.host).to.equal('b');
+      expect(call.port).to.equal(22);
+      expect(call.username).to.equal('me');
+      expect(call.agent).to.equal('tmp');
+      expect(call.privateKey).to.equal(undefined);
+
+      expect(tunnel.retryTimes).to.equal(2);
+    });
+
+    it('should invoke ssh "connect" method with ssh-agent as argument', () => {
+      let from = {
+        hostname: 'a',
+        port: 1,
+        key: __filename,
+        agent: 'tmp'
+      };
+
+      let to = {
+        username: 'me',
+        hostname: 'b',
+        port: 2
+      };
+
+      let tunnel = new Tunnel(from, to);
+      tunnel.connect(2);
+
+      var call = tunnel.connection.connect.getCall(0).args[0];
+      expect(call.host).to.equal('b');
+      expect(call.port).to.equal(22);
+      expect(call.username).to.equal('me');
+      expect(call.agent).to.equal('tmp');
+      expect(call.privateKey).to.equal(undefined);
 
       expect(tunnel.retryTimes).to.equal(2);
     });
