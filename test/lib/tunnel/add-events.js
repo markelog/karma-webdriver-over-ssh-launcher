@@ -92,6 +92,49 @@ describe('Tunnel#addEvents', () => {
     expect(stream.resume.callCount).to.equal(1);
   });
 
+  it('should close all streams', () => {
+    let stream1 = {
+      pipe: sinon.stub(),
+      pause: sinon.stub(),
+      resume: sinon.stub(),
+      end: sinon.stub()
+    };
+
+    let stream2 = {
+      pipe: sinon.stub(),
+      pause: sinon.stub(),
+      resume: sinon.stub(),
+      end: sinon.stub()
+    };
+
+    let socket = {
+      pipe: sinon.stub(),
+      end: sinon.stub()
+    };
+
+    let net = {
+      connect: sinon.stub().returns(socket)
+    };
+
+    tunnel.addEvents();
+
+    Tunnel.__set__('net', net);
+
+    tunnel.connection.emit('tcp connection', 1, function() {
+      return stream1;
+    }, 2);
+
+    tunnel.connection.emit('tcp connection', 1, function() {
+      return stream2;
+    }, 2);
+
+    tunnel.connection.emit('close');
+
+    expect(stream1.end.callCount).to.equal(1);
+    expect(stream2.end.callCount).to.equal(1);
+    expect(socket.end.callCount).to.equal(2);
+  });
+
   it('should deal with "ready" event', function() {
     stubs = {
       info: sinon.stub(logger, 'info')
