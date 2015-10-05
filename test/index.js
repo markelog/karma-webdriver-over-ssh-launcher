@@ -2,19 +2,21 @@ import sinon from 'sinon';
 import { expect } from 'chai';
 
 import rewire from 'rewire';
-import * as vow from 'vow';
 
-let index = rewire('../../lib');
+let index = rewire('../index');
 let createTunnel = index.test.createTunnel;
 let SSHwd = index.test.SSHwd;
 
 describe('index', () => {
-  var stubs = {};
+  let stubs = {};
+  let oldWd = index.__get__('wd');
 
   afterEach(() => {
     for (let stub in stubs) {
       stubs[stub].restore();
     }
+
+    index.__set__('wd', oldWd);
   });
 
   describe('createTunnel', () => {
@@ -29,8 +31,7 @@ describe('index', () => {
     it('should create tunnel', () => {
 
       // babel side effect :-(
-      let tunnel1 = index.__get__('_tunnel');
-      let tunnel2 = index.__get__('_tunnel2');
+      let adit2 = index.__get__('_adit2');
       let loggerCreate = {};
 
       let from = {
@@ -52,14 +53,13 @@ describe('index', () => {
         emit: sinon.stub(),
         on: sinon.stub()
       };
-      let addEventsStub = sinon.stub();
-      let connectStub = sinon.stub();
+      let openStub = sinon.stub();
       let closeStub = sinon.stub();
 
       // Can't use sinon here, for some reason :-(
       let processOnCalled = false;
       let oldProcessOn = process.on;
-      process.on = function(event, method) {
+      process.on = (event, method) => {
         if (event !== 'SIGINT') {
           return oldProcessOn.apply(this, arguments);
         }
@@ -72,7 +72,7 @@ describe('index', () => {
         processOnCalled = true;
       };
 
-      sinon.stub(tunnel2, 'default', function(_from, _to, _logger) {
+      sinon.stub(adit2, 'default', (_from, _to, _logger) => {
         expect(_from.hostname).to.equal(from.hostname);
         expect(_from.port).to.equal(from.port);
 
@@ -82,31 +82,28 @@ describe('index', () => {
         expect(_logger).to.equal(loggerCreate);
 
         return {
-          addEvents: addEventsStub,
-          connect: connectStub,
+          open: openStub,
           close: closeStub
         };
       });
 
-      let result = createTunnel({
+      createTunnel({
         hostname: from.hostname,
         port: from.port,
         tunnel: to
       }, logger, emitterStub);
 
-      expect(addEventsStub.callCount).to.equal(1);
-      expect(connectStub.callCount).to.equal(1);
+      expect(openStub.callCount).to.equal(1);
       expect(processOnCalled).to.equal(true);
 
       process.on = oldProcessOn;
 
-      tunnel2.default.restore();
+      adit2.default.restore();
     });
 
     it('should react on "exit" event', () => {
       // babel side effect :-(
-      let tunnel1 = index.__get__('_tunnel');
-      let tunnel2 = index.__get__('_tunnel2');
+      let adit2 = index.__get__('_adit2');
 
       let debugStub = sinon.stub();
 
@@ -133,19 +130,17 @@ describe('index', () => {
         emit: sinon.stub(),
         on: sinon.stub()
       };
-      let addEventsStub = sinon.stub();
-      let connectStub = sinon.stub();
+      let openStub = sinon.stub();
       let closeStub = sinon.stub();
 
-      sinon.stub(tunnel2, 'default', function() {
+      sinon.stub(adit2, 'default', () => {
         return {
-          addEvents: addEventsStub,
-          connect: connectStub,
+          open: openStub,
           close: closeStub
         };
       });
 
-      let result = createTunnel({
+      createTunnel({
         hostname: from.hostname,
         port: from.port,
         tunnel: to
@@ -171,7 +166,7 @@ describe('index', () => {
       let context = {};
       let called = false;
 
-      index.__set__('wd', function(baseBrowserDecorator, args, logger, tunnel, emitter) {
+      index.__set__('wd', function wd(baseBrowserDecorator, args, logger, tunnel, emitter) {
         expect(this).to.equal(context);
         expect(baseBrowserDecorator).to.equal(1);
         expect(args).to.equal(2);
@@ -194,7 +189,6 @@ describe('index', () => {
       let loggerStub = {
         create: sinon.stub().returns(returnLoggerStub)
       };
-      let defer = vow.defer();
 
       let tunnelStub = {
         promise: {
@@ -208,7 +202,7 @@ describe('index', () => {
         on: sinon.stub()
       };
 
-      index.__set__('wd', function(baseBrowserDecorator, args, logger, tunnel, emitter) {
+      index.__set__('wd', function wd(baseBrowserDecorator, args, logger, tunnel, emitter) {
         expect(this).to.equal(context);
         expect(baseBrowserDecorator).to.equal(1);
         expect(args).to.equal(2);
@@ -233,7 +227,6 @@ describe('index', () => {
 
     it('should proxy wd _start call and work with url', () => {
       let context = {};
-      let called = false;
       let oldStartStub = sinon.stub();
 
       let returnLoggerStub = sinon.stub();
@@ -242,7 +235,6 @@ describe('index', () => {
       let loggerStub = {
         create: sinon.stub().returns(returnLoggerStub)
       };
-      let defer = vow.defer();
 
       let tunnelStub = {
         to: {
@@ -260,9 +252,7 @@ describe('index', () => {
         on: sinon.stub()
       };
 
-      let startStub;
-
-      index.__set__('wd', function(baseBrowserDecorator, args, logger, tunnel, emitter) {
+      index.__set__('wd', function wd(baseBrowserDecorator, args, logger, tunnel, emitter) {
         expect(this).to.equal(context);
         expect(baseBrowserDecorator).to.equal(1);
         expect(args).to.equal(2);
@@ -270,7 +260,6 @@ describe('index', () => {
         expect(tunnel).to.equal(undefined);
         expect(emitter).to.equal(undefined);
         this._start = oldStartStub;
-        called = true;
       });
 
       SSHwd.call(context, 1, 2, loggerStub, tunnelStub, emitterStub);
