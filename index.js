@@ -1,8 +1,10 @@
+require('babel/polyfill');
+
 import * as url from 'url';
 
 import * as karmaWD from 'karma-webdriver-launcher';
 
-import Tunnel from './tunnel';
+import Adit from 'adit';
 
 let wd = karmaWD['launcher:WebDriver'][1];
 let injects = wd.$inject.slice();
@@ -13,7 +15,7 @@ function createTunnel(config, logger, emitter) {
   }
 
   let log = logger.create('ssh tunnel');
-  let tunnel = new Tunnel({
+  let adit = new Adit({
 
     // From
     hostname: config.hostname,
@@ -25,20 +27,19 @@ function createTunnel(config, logger, emitter) {
     port: config.tunnel.port
   }, log);
 
-  tunnel.addEvents();
-  tunnel.connect(3);
+  adit.open(3);
 
   emitter.on('exit', (done) => {
     log.debug('Shutting down the tunnel');
-    tunnel.close();
+    adit.close();
 
     done();
   });
 
   // Just in case
-  process.on('SIGINT', () => tunnel.close());
+  process.on('SIGINT', () => adit.close());
 
-  return tunnel;
+  return adit;
 }
 
 function SSHwd(baseBrowserDecorator, args, logger, tunnel, emitter) {
@@ -50,9 +51,7 @@ function SSHwd(baseBrowserDecorator, args, logger, tunnel, emitter) {
   let log = logger.create('ssh proxy');
 
   // Do not output wd driver prefix, output ours
-  log.create = function() {
-    return log;
-  };
+  log.create = () => log;
 
   // Exit if we can't connect to the remote host
   tunnel.promise.fail(() => emitter.emit('browser_process_failure', this));
@@ -65,7 +64,7 @@ function SSHwd(baseBrowserDecorator, args, logger, tunnel, emitter) {
 
   // Redefine port and hostname, so we can do
   // local-host:local-port -> remote-host:remote-port
-  this._start = function(addr) {
+  this._start = (addr) => {
     addr = url.parse(addr, true);
 
     addr.hostname = tunnel.to.hostname;
