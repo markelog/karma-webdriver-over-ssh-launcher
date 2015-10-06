@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/markelog/karma-webdriver-over-ssh-launcher)",
   "dependencies": {
-    "adit": "^0.1.0",
+    "adit": "^0.1.9",
     "babel": "^5.8.23",
     "karma-webdriver-launcher": "^1.0.4"
   },
