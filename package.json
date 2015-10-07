@@ -16,7 +16,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "github.com/markelog/karma-webdriver-over-ssh-launcher"
+    "url": "github.com/yandex/karma-webdriver-over-ssh-launcher"
   },
   "keywords": [
     "karma-plugin",
@@ -30,11 +30,11 @@
     "license"
   ],
   "author": "Oleg Gaidarenko <markelog@gmail.com>",
-  "license": "MIT",
+  "license": "MLP-2",
   "bugs": {
-    "url": "https://github.com/markelog/karma-webdriver-over-ssh-launcher)/issues"
+    "url": "https://github.com/yandex/karma-webdriver-over-ssh-launcher)/issues"
   },
-  "homepage": "https://github.com/markelog/karma-webdriver-over-ssh-launcher)",
+  "homepage": "https://github.com/yandex/karma-webdriver-over-ssh-launcher)",
   "dependencies": {
     "adit": "^0.1.9",
     "babel": "^5.8.23",
