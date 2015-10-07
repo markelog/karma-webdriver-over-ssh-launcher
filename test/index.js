@@ -8,12 +8,79 @@ let createTunnel = index.test.createTunnel;
 let SSHwd = index.test.SSHwd;
 
 describe('index', () => {
-  let stubs = {};
+  let from;
+  let to;
+  let context;
+
+  let tunnelStub;
+  let loggerStub;
+  let returnedStub;
+  let thenStub;
+  let emitterStub;
+  let failStub;
+  let classStub;
+
+  let createAdit;
+
+  let adit = index.__get__('_adit2');
   let oldWd = index.__get__('wd');
 
+  beforeEach(() => {
+    from = {
+      hostname: 'from-hostname',
+      port: 1
+    };
+
+    to = {
+      username: 'me',
+      hostname: 'to-hostname',
+      port: 2
+    };
+
+    context = {};
+    returnedStub = sinon.stub();
+    thenStub = sinon.stub();
+    failStub = sinon.stub();
+
+    emitterStub = {
+      emit: sinon.stub(),
+      on: sinon.stub()
+    };
+
+    loggerStub = {
+      debug: sinon.stub(),
+      create: sinon.stub().returns(returnedStub)
+    };
+
+    tunnelStub = {
+      to: to,
+      promise: {
+        fail: failStub,
+        then: thenStub
+      }
+    };
+
+    classStub = {
+      open: sinon.stub(),
+      close: sinon.stub()
+    };
+
+    let logger = {
+      create: () => loggerStub
+    };
+
+    createAdit = () => {
+      createTunnel({
+        hostname: from.hostname,
+        port: from.port,
+        tunnel: to
+      }, logger, emitterStub);
+    };
+  });
+
   afterEach(() => {
-    for (let stub in stubs) {
-      stubs[stub].restore();
+    if (adit.default.restore) {
+      adit.default.restore();
     }
 
     index.__set__('wd', oldWd);
@@ -28,142 +95,86 @@ describe('index', () => {
       expect(result).to.equal(false);
     });
 
-    it('should create tunnel', () => {
-
-      // babel side effect :-(
-      let adit2 = index.__get__('_adit2');
-      let loggerCreate = {};
-
-      let from = {
-        hostname: 'a',
-        port: 1
-      };
-
-      let to = {
-        username: 'me',
-        hostname: 'b',
-        port: 2
-      };
-
-      let logger = {
-        create: () => loggerCreate
-      };
-
-      let emitterStub = {
-        emit: sinon.stub(),
-        on: sinon.stub()
-      };
-      let openStub = sinon.stub();
-      let closeStub = sinon.stub();
-
-      // Can't use sinon here, for some reason :-(
-      let processOnCalled = false;
+    it('should close tunnel on "SIGINT" event', (done) => {
       let oldProcessOn = process.on;
       process.on = (event, method) => {
         if (event !== 'SIGINT') {
           return oldProcessOn.apply(this, arguments);
         }
 
-        expect(method).to.be.a('function');
-
         method.call();
-        expect(closeStub.callCount).to.equal(1);
-
-        processOnCalled = true;
+        expect(classStub.close.callCount).to.equal(1);
+        done();
       };
 
-      sinon.stub(adit2, 'default', (_from, _to, _logger) => {
+      sinon.stub(adit, 'default', () => classStub);
+      createAdit();
+      process.on = oldProcessOn;
+    });
+
+    it('should create tunnel', () => {
+      sinon.stub(adit, 'default', (_from, _to, _logger) => {
         expect(_from.hostname).to.equal(from.hostname);
         expect(_from.port).to.equal(from.port);
 
         expect(_to.hostname).to.equal(to.hostname);
         expect(_to.port).to.equal(to.port);
 
-        expect(_logger).to.equal(loggerCreate);
+        expect(_logger).to.equal(loggerStub);
 
-        return {
-          open: openStub,
-          close: closeStub
-        };
+        return classStub;
       });
 
-      createTunnel({
-        hostname: from.hostname,
-        port: from.port,
-        tunnel: to
-      }, logger, emitterStub);
-
-      expect(openStub.callCount).to.equal(1);
-      expect(processOnCalled).to.equal(true);
-
-      process.on = oldProcessOn;
-
-      adit2.default.restore();
+      createAdit();
     });
 
-    it('should react on "exit" event', () => {
-      // babel side effect :-(
-      let adit2 = index.__get__('_adit2');
+    describe('"exit" event', () => {
+      let fnStub;
 
-      let debugStub = sinon.stub();
+      beforeEach(() => {
+        sinon.stub(adit, 'default', () => classStub);
+        fnStub = sinon.stub();
 
-      let loggerCreate = {
-        debug: debugStub
-      };
+        createAdit();
 
-      let from = {
-        hostname: 'a',
-        port: 1
-      };
-
-      let to = {
-        username: 'me',
-        hostname: 'b',
-        port: 2
-      };
-
-      let logger = {
-        create: () => loggerCreate
-      };
-
-      let emitterStub = {
-        emit: sinon.stub(),
-        on: sinon.stub()
-      };
-      let openStub = sinon.stub();
-      let closeStub = sinon.stub();
-
-      sinon.stub(adit2, 'default', () => {
-        return {
-          open: openStub,
-          close: closeStub
-        };
+        // Call "exit" handler
+        emitterStub.on.firstCall.args[1](fnStub);
       });
 
-      createTunnel({
-        hostname: from.hostname,
-        port: from.port,
-        tunnel: to
-      }, logger, emitterStub);
+      it('should emit "exit" event', () => {
+        expect(emitterStub.on.callCount).to.equal(1);
+        expect(emitterStub.on.firstCall.args[0]).to.equal('exit');
+      });
 
-      expect(emitterStub.on.callCount).to.equal(1);
-      expect(emitterStub.on.getCall(0).args[0]).to.equal('exit');
+      it('should close tunnel', () => {
+        expect(classStub.close.callCount).to.equal(1);
+      });
 
-      let method = emitterStub.on.getCall(0).args[1];
-      let fnStub = sinon.stub();
-      method.call(this, fnStub);
+      it('should output debug info to the console', () => {
+        expect(loggerStub.debug.callCount).to.equal(1);
+        expect(loggerStub.debug.firstCall.args[0]).to.equal('Shutting down the tunnel');
+      });
 
-      expect(closeStub.callCount).to.equal(1);
-      expect(debugStub.callCount).to.equal(1);
-      expect(debugStub.getCall(0).args[0]).to.equal('Shutting down the tunnel');
-      expect(fnStub.callCount).to.equal(1);
+      it('should call funarg of exit event', () => {
+        expect(fnStub.callCount).to.equal(1);
+      });
     });
-
   });
 
   describe('SSHwd', () => {
+    let oldStartStub;
+
+    beforeEach(() => {
+      oldStartStub = sinon.stub();
+
+      index.__set__('wd', function wd() {
+        this._start = oldStartStub;
+      });
+
+      SSHwd.call(context, 1, 2, loggerStub, tunnelStub, emitterStub);
+    });
+
     it('should call the webdriver-launcher with correct arguments and context', () => {
-      let context = {};
       let called = false;
 
       index.__set__('wd', function wd(baseBrowserDecorator, args, logger, tunnel, emitter) {
@@ -180,93 +191,23 @@ describe('index', () => {
       expect(called).to.equal(true);
     });
 
-    it('should establish pretend connect to the remote server', () => {
-      let context = {};
-      let called = false;
+    it('should handle erroneous situation', () => {
 
-      let returnLoggerStub = sinon.stub();
-      let failStub = sinon.stub();
-      let loggerStub = {
-        create: sinon.stub().returns(returnLoggerStub)
-      };
+      // Execute fail callback
+      failStub.firstCall.args[0]();
 
-      let tunnelStub = {
-        promise: {
-          fail: failStub
-        },
-        close: sinon.stub()
-      };
-
-      let emitterStub = {
-        emit: sinon.stub(),
-        on: sinon.stub()
-      };
-
-      index.__set__('wd', function wd(baseBrowserDecorator, args, logger, tunnel, emitter) {
-        expect(this).to.equal(context);
-        expect(baseBrowserDecorator).to.equal(1);
-        expect(args).to.equal(2);
-        expect(logger).to.equal(returnLoggerStub);
-        expect(tunnel).to.equal(undefined);
-        expect(emitter).to.equal(undefined);
-        called = true;
-      });
-
-      SSHwd.call(context, 1, 2, loggerStub, tunnelStub, emitterStub);
-      expect(called).to.equal(true);
-      expect(context).to.have.property('_start');
-
-      expect(loggerStub.create.callCount).to.equal(1);
-
-      let failMethod = failStub.getCall(0).args[0];
-
-      expect(emitterStub.emit.callCount).to.equal(0);
-      failMethod();
       expect(emitterStub.emit.callCount).to.equal(1);
+      expect(emitterStub.emit.firstCall.args[0]).to.equal('browser_process_failure');
     });
 
-    it('should proxy wd _start call and work with url', () => {
-      let context = {};
-      let oldStartStub = sinon.stub();
+    it('should mangle url which will be passed to the browser through wd', () => {
+      // Usually called though karma
+      context._start('http://localhost:9876/?test=1');
 
-      let returnLoggerStub = sinon.stub();
-      let failStub = sinon.stub();
-      let thenStub = sinon.stub();
-      let loggerStub = {
-        create: sinon.stub().returns(returnLoggerStub)
-      };
+      // Execute successful callback
+      thenStub.firstCall.args[0]();
 
-      let tunnelStub = {
-        to: {
-          hostname: 'a',
-          port: 2
-        },
-        promise: {
-          fail: failStub,
-          then: thenStub
-        }
-      };
-
-      let emitterStub = {
-        emit: sinon.stub(),
-        on: sinon.stub()
-      };
-
-      index.__set__('wd', function wd(baseBrowserDecorator, args, logger, tunnel, emitter) {
-        expect(this).to.equal(context);
-        expect(baseBrowserDecorator).to.equal(1);
-        expect(args).to.equal(2);
-        expect(logger).to.equal(returnLoggerStub);
-        expect(tunnel).to.equal(undefined);
-        expect(emitter).to.equal(undefined);
-        this._start = oldStartStub;
-      });
-
-      SSHwd.call(context, 1, 2, loggerStub, tunnelStub, emitterStub);
-
-      context._start('http://localhost:9876/?bla=1');
-      thenStub.getCall(0).args[0].call();
-      expect(oldStartStub.getCall(0).args[0]).to.equal('http://a:2/?bla=1');
+      expect(oldStartStub.firstCall.args[0]).to.equal('http://to-hostname:2/?test=1');
     });
   });
 });

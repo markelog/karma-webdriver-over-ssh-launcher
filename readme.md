@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/markelog/karma-webdriver-over-ssh-launcher.svg?branch=master)](https://travis-ci.org/markelog/karma-webdriver-over-ssh-launcher)
+[![Build Status](https://travis-ci.org/yandex/karma-webdriver-over-ssh-launcher.svg?branch=master)](https://travis-ci.org/yandex/karma-webdriver-over-ssh-launcher)
 
 karma-webdriver-over-ssh-launcher
 ========================
@@ -53,8 +53,8 @@ module.exports = function(karma) {
 });
 ```
 
-You can proxy all your `localhost:9876` to `some-remote-server:8000`. Or use it as simple `karma-wedriver-launcher` by specifing `tunnel` value to `false` :-).
+You can proxy all your `some-remote-server:8000` requests to `localhost:9876`. Or use it as simple `karma-wedriver-launcher` by specifing `tunnel` value to `false` :-).
 
 ## Why?
-In some cases, your selenium grid might have access to `some-remote-server:8000`, but might not have one to `localhost:9876`.
+In some cases, your selenium grid might have access to `some-remote-server:8000`, but might not have one to `your-host:9876`.
 

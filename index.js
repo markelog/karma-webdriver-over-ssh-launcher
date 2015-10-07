@@ -63,7 +63,7 @@ function SSHwd(baseBrowserDecorator, args, logger, tunnel, emitter) {
   let wdStart = this._start;
 
   // Redefine port and hostname, so we can do
-  // local-host:local-port -> remote-host:remote-port
+  // remote-host:remote-port -> local-host:local-port
   this._start = (addr) => {
     addr = url.parse(addr, true);
 
