@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/yandex/karma-webdriver-over-ssh-launcher.svg?branch=master)](https://travis-ci.org/yandex/karma-webdriver-over-ssh-launcher)
+[![Build Status](https://travis-ci.org/markelog/karma-webdriver-over-ssh-launcher.svg?branch=master)](https://travis-ci.org/markelog/karma-webdriver-over-ssh-launcher)
 
 karma-webdriver-over-ssh-launcher
 ========================
